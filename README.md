@@ -22,12 +22,21 @@ PAAT is created to work with phyloseq objects that contain:
 
 The test dataset is a subset of the dataset from the article "The treatment-naive microbiome in new-onset Crohn's disease" by Gevers *et al.*. Description on how this dataset was created and filtered is found [here](../master/Rscripts/testdataset_gevers.R).
 
-Assuming you have your phyloseq object (e.g. from DADA2 output) named `ps`
-
 1. load `phyloseq` and PAAT functions
 ```
-library(phyloseq)
-source("https://github.com/mruehlemann/paat/raw/master/Rscripts/paat_functions.R")
+> library(phyloseq)
+> source("https://github.com/mruehlemann/paat/raw/master/Rscripts/paat_functions.R")
 ```
 
-2. 
+2. load testdataset `ps`
+```
+> load("gevers.Robj")
+> ps
+phyloseq-class experiment-level object
+otu_table()   OTU Table:         [ 9965 taxa and 321 samples ]
+sample_data() Sample Data:       [ 321 samples by 56 sample variables ]
+tax_table()   Taxonomy Table:    [ 9965 taxa by 7 taxonomic ranks ]
+phy_tree()    Phylogenetic Tree: [ 9965 tips and 9964 internal nodes ]
+```
+
+ 

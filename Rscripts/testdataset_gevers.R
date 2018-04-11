@@ -1,7 +1,7 @@
 ### import phyloseq
 library(phyloseq); packageVersion("phyloseq")
 
-### path to the greengenes 97% OTU reference tree
+### path to the greengenes 97% OTU reference tree; available from http://greengenes.microbio.me/gg_13_8_otus/trees/97_otus_unannotated.tree
 path_to_greengenes_tree="<enter path here>"
 
 ### the Gevers et al biom file and sample metadata was downloaded from Qiita (https://qiita.ucsd.edu/study/description/1939)
@@ -18,3 +18,5 @@ specs<-with(specs,specs[diagnosis %in% c("CD","no") & age>10 & age<25 & is.na(ag
 ### create phyloseq object from this
 ps<-merge_phyloseq(x,sample_data(specs))
 
+### save
+save(list=c("ps"),file="gevers.Robj")
