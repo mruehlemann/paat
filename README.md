@@ -82,6 +82,8 @@ phy_tree()    Phylogenetic Tree: [ 9965 tips and 9964 internal nodes ]
 > presence_thresh=0.25
 > abu_thresh_upper=0.5
 > abu_thresh_lower=0.001
-> phylocount.filter<-phylocount[,colMeans(phylocount/subset_depth)<abu_thresh_upper & colMeans(phylocount/subset_depth)>abu_thresh_lower & apply(aggregate(. ~ model.specs$Group,data=data.frame(ifelse(phylocount>0,1,0)),mean)[,-1],2,min)>presence_thresh] /subset_depth
+> phylocount.filter<-phylocount[,colMeans(phylocount/subset_depth)<abu_thresh_upper 
+  & colMeans(phylocount/subset_depth)>abu_thresh_lower 
+  & apply(aggregate(. ~ model.specs$Group,data=data.frame(ifelse(phylocount>0,1,0)),mean)[,-1],2,min)>presence_thresh]
 ```
 
