@@ -20,7 +20,7 @@ PAAT is created to work with phyloseq objects that contain:
 
 ## Example steps
 
-The test dataset is a subset of the dataset from the article "The treatment-naive microbiome in new-onset Crohn's disease" by Gevers *et al.*. Description on how this dataset was created and filtered is found [here](../blob/master/Rscripts/testdataset_gevers.R).
+The test dataset is a subset of the dataset from the article "The treatment-naive microbiome in new-onset Crohn's disease" by Gevers *et al.*. Description on how this dataset was created and filtered is found [here](../master/Rscripts/testdataset_gevers.R).
 
 Assuming you have your phyloseq object (e.g. from DADA2 output) named `ps`
 
