@@ -8,6 +8,10 @@ The method does not depend on classification using databases, which is error-pro
 
 ## Prerequisites
 
+R Packages:
+* MASS (glm.nb function)
+* phyloseq 
+
 PAAT is created to work with phyloseq objects that contain:
 
 1. The OTU/ASV abundance table
@@ -16,9 +20,14 @@ PAAT is created to work with phyloseq objects that contain:
 
 ## Example steps
 
+The test dataset is a subset of the dataset from the article "The treatment-naive microbiome in new-onset Crohn's disease" by Gevers *et al.*. Description on how this dataset was created and filtered is found [here](../blob/master/Rscripts/testdataset_gevers.R).
+
 Assuming you have your phyloseq object (e.g. from DADA2 output) named `ps`
 
-1. load PAAT functions
+1. load `phyloseq` and PAAT functions
+```
+library(phyloseq)
+source("https://github.com/mruehlemann/paat/raw/master/Rscripts/paat_functions.R")
 ```
 
-```
+2. 
