@@ -31,10 +31,10 @@ x<-as.numeric(abundance_data[,taxon])
 zero=mean(x==0)
 count=mean(x[x!=0])
 if(zero>zerothresh){
-f1=tryCatch({summary(glm.nb(as.formula(paste("count ~ ", paste(c(covars, testingvar),collapse="+"))),data=data.frame(sample_specs,count=x),subset=x>0))$coefficients[testingvar,c(1,2,4)]},error = function(x) NA,finally={})
+f1=tryCatch({summary(glm.nb(as.formula(paste("count ~ ", paste(c(covars, testingvar),collapse="+"))),data=data.frame(sample_specs,count=x),subset=x>0))$coefficients[length(covars)+2,c(1,2,4)]},error = function(x) NA,finally={})
 returnmat[taxon,"method"]<-"GLMtrunc"
 }else{
-f1=tryCatch({summary(glm.nb(as.formula(paste("count ~ ", paste(c(covars, testingvar),collapse="+"))),data=data.frame(sample_specs,count=x)))$coefficients[testingvar,c(1,2,4)]},error = function(x) NA,finally={})
+f1=tryCatch({summary(glm.nb(as.formula(paste("count ~ ", paste(c(covars, testingvar),collapse="+"))),data=data.frame(sample_specs,count=x)))$coefficients[length(covars)+2,c(1,2,4)]},error = function(x) NA,finally={})
 returnmat[taxon,"method"]<-"GLM"
 }
 returnmat[taxon,c("zero","count")]<-c(zero,count)
@@ -51,7 +51,7 @@ for(taxon in colnames(abundance_data)){
 x<-as.numeric(abundance_data[,taxon])
 zero=mean(x==0)
 count=mean(x[x!=0])
-f1=tryCatch({summary(lm(as.formula(paste("count ~ ", paste(c(covars, testingvar),collapse="+"))),data=data.frame(sample_specs,count=trans.arcsine(x))))$coefficients[testingvar,c(1,2,4)]},error = function(x) NA,finally={})
+f1=tryCatch({summary(lm(as.formula(paste("count ~ ", paste(c(covars, testingvar),collapse="+"))),data=data.frame(sample_specs,count=trans.arcsine(x))))$coefficients[length(covars)+2,c(1,2,4)]},error = function(x) NA,finally={})
 returnmat[taxon,"method"]<-"LMasinsqrt"
 returnmat[taxon,c("zero","count")]<-c(zero,count)
 returnmat[taxon,c("beta","se","p")]<-as.numeric(f1)
