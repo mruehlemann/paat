@@ -75,16 +75,17 @@ return(returnmat)
 
 annotate_branches<-function(phyloseq, results, phylomat, annot_thresh=.5, show_min=.2, annot_min=.05){
 results.out<-results
-results[,c("tag","tax","ntips")]<-NA
+results.out[,c("tag","tax","ntips")]<-NA
 for(signal in rownames(results)){
 tips_in_branch<-names(which(phylomat[,signal]==1))
 tipcounts.signal<-as.matrix(otu_table(phyloseq))[tips_in_branch,,drop=F]
 tipcounts.weights<-rowSums(tipcounts.signal)/sum(tipcounts.signal)
-df<-data.frame(tax_table(testdataset),stringsAsFactors=F)[tips_in_branch,]
+df<-data.frame(tax_table(phyloseq),stringsAsFactors=F)[tips_in_branch,]
 df[is.na(df)]<-FALSE
 df[,7]<-ifelse(df[,7]==F,F,paste(df[,6],df[,7],sep="_"))
 if(length(tips_in_branch)>1){
-ta<-apply(df,2,function(x){df2<-data.frame(tax=as.character(x),w=tipcounts.weights);if(all(df2$tax==F)){return(FALSE)};zz=aggregate(w ~ tax,data=df2,sum);notshown=sum(zz$w>annot_min & zz$w<=show_min & zz$tax!=F);zz<-zz[zz$w>show_min & zz$tax!="FALSE",];zz<-zz[order(zz$w,decreasing=T),];ifelse(sum(zz$w)>annot_thresh,ifelse(notshown>0,paste0(paste(zz$tax,collapse=","),"(+",notshown,")"),paste(zz$tax,collapse=",")),"")})
+ta<-apply(df,2,function(x){df2<-data.frame(tax=as.character(x),w=tipcounts.weights);if(all(df2$tax==F)){return(FALSE)};zz=aggregate(w ~ tax,data=df2,sum);notshown=sum(zz$w>annot_min & zz$w<=show_min & zz$tax!=F);zz<-zz[zz$w>show_min & zz$tax!="FALSE",];zz<-zz[order(zz$w,decreasing=T),];
+   ifelse(sum(zz$w)>annot_thresh,ifelse(notshown>0,paste0(paste(zz$tax,collapse=","),"(+",notshown,")"),paste(zz$tax,collapse=",")),"")})
 }else{
 ta<-df
 }
@@ -99,7 +100,7 @@ return(results.out)
 
 plot_annotated_tree<-function(phyloseq, results, phymat, tips, expansion=10){
 require(ggtree)
-phyloseq.sig<-prune_taxa(taxa_names(phyloseq) %in% c(tips_to_keep, results$tag), phyloseq)
+phyloseq.sig<-prune_taxa(taxa_names(phyloseq) %in% c(tips, results$tag), phyloseq)
 phyloseq.sig.tree<-phy_tree(phyloseq.sig)
 treeplot<-ggtree(phyloseq.sig.tree,layout="circular",branch.length="none")+scale_x_continuous(expand=c(0,expansion))+geom_tiplab2()
 for(signal in rownames(results)){

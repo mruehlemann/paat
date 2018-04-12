@@ -24,7 +24,7 @@ PAAT is created to work with phyloseq objects that contain:
 
 ## Example steps
 
-The test dataset is a subset of the dataset from the article "The treatment-naive microbiome in new-onset Crohn's disease" by Gevers *et al.*. Description on how this dataset was created and filtered is found [here](../master/Rscripts/testdataset_gevers.R).
+The test dataset is a subset of the dataset from the article "The treatment-naive microbiome in new-onset Crohn's disease" by Gevers *et al.*. Description on how this dataset was created and filtered is found [here](../master/examples/gevers_generate_testdataset.R).
 
 1. load `phyloseq` and PAAT functions
 ```
@@ -48,7 +48,7 @@ phy_tree()    Phylogenetic Tree: [ 9965 tips and 9964 internal nodes ]
 3. We set a threshold to subsample to 3,000 sequences per sample; some samples will be excluded because the fall below this threshold
 ```
 > subset_depth=3000 
-> ps.even<-rarefy_even_depth(ps,sample.size=subset_depth,replace=F)
+> ps.even<-rarefy_even_depth(ps,sample.size=subset_depth,replace=F,rngseed=666)
 ```
 
 4. Now we define which variable includes the information on group membership which will be used for testing. Additionally we define the sets we use for contrasting (no IBD vs. CD) and which covariates are used for correction in the models (age and sex).
@@ -76,9 +76,8 @@ phy_tree()    Phylogenetic Tree: [ 9965 tips and 9964 internal nodes ]
 > phylocount<-t(as(otu_table(testdataset),"matrix")) %*% phylomat
 ```
 
-8. To reduce multiple testing burden and exclude low abundant branches, we define filtering thresholds. We want to remove all branches that are present in less than 25% of the samples in both groups. 
-...Additionally, we filter out all branches with less than 0.1% mean abundance across all samples. However, since we also do not want branches that are too broad, we also define an upper threshold of 50% maximum mean abundance.
-
+8. To reduce multiple testing burden and exclude low abundant branches, we define filtering thresholds. We want to remove all branches that are present in less than 25% of the samples in both groups.  
+   Additionally, we filter out all branches with less than 0.1% mean abundance across all samples. However, since we also do not want branches that are too broad, we also define an upper threshold of 50% maximum mean abundance.
 ```
 > presence_thresh=0.25
 > abu_thresh_upper=0.5
@@ -87,8 +86,8 @@ phy_tree()    Phylogenetic Tree: [ 9965 tips and 9964 internal nodes ]
    max.mean=abu_thresh_upper, group.min.presence=presence_thresh)
 ```
 
-10. To futher reduce redundant branches, parent branches that are more than 95% similar (Bray-Curtis) to one of their sub-branches are excluded.
-...For this we first create a matrix that expresses parent-child relationship, that is 1 if the branch (rows) is a sub-branch of the parent branch (columns). 
+10. To futher reduce redundant branches, parent branches that are more than 95% similar (Bray-Curtis) to one of their sub-branches are excluded.  
+   For this we first create a matrix that expresses parent-child relationship, that is 1 if the branch (rows) is a sub-branch of the parent branch (columns). 
 ```
 > phylomat.filter<-phylomat[,colnames(phylocount.filter)]
 > phylomat.filter.cor<-cor(phylomat.filter)
@@ -100,11 +99,12 @@ phy_tree()    Phylogenetic Tree: [ 9965 tips and 9964 internal nodes ]
 ```
 > phylocount.bc<-1-as.matrix(vegdist(t(phylocount.filter)))
 > diag(phylocount.bc)<-0
-> phylocount.filter<-phylocount.filter[,apply((phylocount.bc * tree_to_mat.filter.cor),2,function(x) any(x>0.95))==F]
+> phylocount.filter<-phylocount.filter[,apply((phylocount.bc * phylomat.filter.cor),2,function(x) any(x>0.95))==F]
 ```
 
 11. As we are trying to find meaningful clusters that are not too broad, we exclude all branches and their parents, that cover more than 25% of all leaves in the tree and arise from merging two larger subtrees (each of the two subtree consist of > 20% of the total leaves in this branch).
 ```
+> phylomat.jc<-1-as.matrix(vegdist(t(phylomat.filter),"jaccard"))
 > excl<-names(which(apply(phylomat.jc*phylomat.filter.cor,2,max)<0.8 & colSums(phylomat.filter)>(nrow(phylomat.filter)*0.25)))
 > phylocount.filter<-phylocount.filter[,!(colnames(phylocount.filter) %in% unique(c(excl,names(which(apply(phylomat.filter.cor[c(excl),,drop=F]==1,2,any))))))]
 ```
@@ -114,7 +114,7 @@ differential abundance in the non-zero samples. For branches with < 5% zeroes, a
 ```
 > outmat<-test_abundance(phylocount.filter,model.specs,testingvar="Group",covars=covar,zerothresh=0.05)
 ```
-...Alternatively, there is also a wrapper which uses relative abundances as input, arcsin-squareroot transforms them and uses a linear model for differential abundance testing. Generally, it is up to the user which test they prefer.
+   Alternatively, there is also a wrapper which uses relative abundances as input, arcsin-squareroot transforms them and uses a linear model for differential abundance testing. Generally, it is up to the user which test they prefer.
 For the purpose of this example, we stick to the arcsin-squareroot method as this is the method used in Gevers *et al.*
 ```
 > phylocount.filter.rel<-phylocount.filter/subset_depth
@@ -122,7 +122,7 @@ For the purpose of this example, we stick to the arcsin-squareroot method as thi
 > outmat$p.adj<-p.adjust(outmat$p,"fdr")
 > outmat.phylo<-outmat[outmat$p.adj<0.05 & is.na(outmat$p.adj)==F,]
 > nrow(outmat.phylo)
-[1] 135
+[1] 129
 ```
 
 13. After correction for multiple testing using the Benjamini-Hochberg method, a total of 135 branches are significantly associated with Crohn's disease. However, these results also include nested signals, as signals from parts
@@ -136,7 +136,7 @@ closer to the tips influence the results at broader parent-branches. Before we c
 > unique(outmat.phylo$cluster)
 ```
 
-14. The 135 signals could be assigned to 18 clusters. To refine the signals and filter out weak results, we take each cluster and order them by absolute effect size. The strongest signal of the cluster is retained and all parent and child branches of this signal are removed from the results list. Signals from the same cluster,
+14. The 129 signals could be assigned to 21 clusters. To refine the signals and filter out weak results, we take each cluster and order them by absolute effect size. The strongest signal of the cluster is retained and all parent and child branches of this signal are removed from the results list. Signals from the same cluster,
 but from neighbouring branches are retained and again ordered by absolute effect size. This itereation is repeated until no independent signals are left in the cluster. Then the procedure is performed in the same manner for the
 other clusters. Through this, only the strongest independent signals are retained. 
 ```
@@ -154,7 +154,7 @@ other clusters. Through this, only the strongest independent signals are retaine
 [1] 28
 ```
 
-15. Out of the 135 Signal, 28 are retained as independent. We annotate these branches by weighing the tip labels at the different taxonomic levels by the mean abundances in the dataset. Only if the cumulative weight at a levels
+15. Out of the 129 Signal, 29 are retained as independent. We annotate these branches by weighing the tip labels at the different taxonomic levels by the mean abundances in the dataset. Only if the cumulative weight at a levels
 surpasses 0.5 the label is reported at this level. Addtionally, a tag-tips are defined, as the highest abundant tips in the respective branches.
 ```
 > phylocount.final<-phylocount.filter[,rownames(outmat.phylo.refined)]
@@ -166,14 +166,15 @@ surpasses 0.5 the label is reported at this level. Addtionally, a tag-tips are d
 16. We will now create a plot of the tree with subtrees highlighted using the results. However, since the complete dataset has ~ 3,500 tips, we first need to filter these before plotting. We use the same theshold as before for the
 branch abundances. Then we create the plot and save it.
 ```
+> otu.mat<-as.data.frame(t(otu_table(testdataset)))
 > otu.mat.sub<-filter_abundance(abutab=otu.mat, groups=model.specs$Group, min.mean=abu_thresh_lower, 
    group.min.presence=presence_thresh)
 > tips_to_keep<-colnames(otu.mat.sub)
-> treep<-plot_annotated_tree(phyloseq=testdataset, results=outmat.phylo.refined, 
+> treep<-plot_annotated_tree(phyloseq=testdataset, results=outmat.annotated, 
    phymat=phylomat.final, tips=tips_to_keep)
-> ggsave(treep, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".bc.new.pdf")
-   ,height=16,width=20)
+> ggsave(treep, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".bc.new.pdf"),
+   height=16,width=20)
 ```
-... The resulting image (after only slight movements of overlapping/truncated labels):
+   The resulting image (after only slight movements of overlapping/truncated labels):
 
 ![gevers-paat](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.paat.clean.png)
