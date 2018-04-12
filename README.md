@@ -178,3 +178,52 @@ branch abundances. Then we create the plot and save it.
    The resulting image (after only slight movements of overlapping/truncated labels):
 
 ![gevers-paat](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.paat.clean.png)
+
+17. We also apply the same linear model framework to the OTU abundance table and plot the tree.
+```
+res.otu<-test_abundance_asinsqrt(abundance_data=otu.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
+res.otu$p.adj<-p.adjust(res.otu$p,"fdr")
+outmat.otu<-res.otu[res.otu$p.adj<0.05 & is.na(res.otu$p.adj)==F,]
+phylomat.otu<-ifelse(cor(otu.mat.sub)==1,1,0)
+outmat.otu.annotated<-annotate_branches(phyloseq=testdataset,results=outmat.otu, phylomat=phylomat.otu)
+treep.otu<-plot_annotated_tree(phyloseq=testdataset, results=outmat.otu.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
+ggsave(treep.otu, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".otu.pdf"), height=16,width=20)
+```
+   It shows, that the PAAT picks up all signals also seen in the OTU based analysis, plus additional signals not seen when analyzing OTUs (e.g. Prevotella copri)
+
+![gevers-otu](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.otu.clean.png)
+
+18. We can also perform the calculations on groups using taxonomic assigments. For this we collapse OTUs with the same annotation down to genus level into clusters and use them in differential abundance calculation.
+```
+tax.gen<-unique(tax_table(testdataset)[,1:6])
+tt.gen<-tax_table(testdataset)[,1:6]
+alltax<-apply(tax.gen,1,paste,collapse=";")
+cl<-data.frame(id=rownames(tt.gen), cluster=sapply(apply(tt.gen,1,paste,collapse=";"),function(x) match(x, alltax)))
+library(reshape2)
+ii<-data.frame(dcast(id ~ cluster,data=cl,fill=0),row.names=1)
+ii[ii>0]<-1
+ii<-ii[colnames(otu.mat),]
+colnames(ii)<-as.character(alltax)
+
+gen.mat<-as.matrix(otu.mat) %*% as.matrix(ii)
+gen.mat.sub<-filter_abundance(abutab=gen.mat, groups=model.specs$Group, min.mean=abu_thresh_lower, group.min.presence=presence_thresh)
+res.gen<-test_abundance_asinsqrt(abundance_data=gen.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
+res.gen$p.adj<-p.adjust(res.gen$p,"fdr")
+outmat.gen<-res.gen[res.gen$p.adj<0.05 & is.na(res.gen$p.adj)==F,]
+
+otu_to_siggen<-names(which(rowSums(ii[,rownames(outmat.gen)])>0))
+res.gen<-res.otu[rownames(res.otu) %in% otu_to_siggen,]
+
+outmat.gen.annotated<-res.gen
+outmat.gen.annotated$tag<-rownames(outmat.gen.annotated)
+outmat.gen.annotated$tax<-apply(tt.gen[rownames(outmat.gen.annotated),],1,function(x) x[max(which(is.na(x)==F))])
+outmat.gen.annotated$ntips<-colSums(ii)[match(apply(tt.gen[rownames(outmat.gen.annotated),],1,paste, collapse=";"),alltax)]
+
+treep.gen<-plot_annotated_tree(phyloseq=testdataset, results=outmat.gen.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
+ggsave(treep.gen, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".gen.pdf"), height=16,width=20)
+```
+
+   We see, that the overall signals are in some regions much broader than for the other methods. Faecalibacterium signal is not picked up, likely because of two different signals in different direction within the Faecalibacterium genus.  
+
+![gevers-otu](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.gen.clean.png)
+

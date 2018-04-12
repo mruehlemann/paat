@@ -78,3 +78,45 @@ otu.mat.sub<-filter_abundance(abutab=otu.mat, groups=model.specs$Group, min.mean
 tips_to_keep<-colnames(otu.mat.sub)
 treep<-plot_annotated_tree(phyloseq=testdataset, results=outmat.annotated, phymat=phylomat.final, tips=tips_to_keep)
 ggsave(treep, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".paat.pdf"), height=16,width=20)
+
+
+res.otu<-test_abundance_asinsqrt(abundance_data=otu.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
+res.otu$p.adj<-p.adjust(res.otu$p,"fdr")
+outmat.otu<-res.otu[res.otu$p.adj<0.05 & is.na(res.otu$p.adj)==F,]
+nrow(outmat.otu)
+
+phylomat.otu<-ifelse(cor(otu.mat.sub)==1,1,0)
+outmat.otu.annotated<-annotate_branches(phyloseq=testdataset,results=outmat.otu, phylomat=phylomat.otu)
+
+treep.otu<-plot_annotated_tree(phyloseq=testdataset, results=outmat.otu.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
+ggsave(treep.otu, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".otu.pdf"), height=16,width=20)
+
+
+
+tax.gen<-unique(tax_table(testdataset)[,1:6])
+tt.gen<-tax_table(testdataset)[,1:6]
+alltax<-apply(tax.gen,1,paste,collapse=";")
+cl<-data.frame(id=rownames(tt.gen), cluster=sapply(apply(tt.gen,1,paste,collapse=";"),function(x) match(x, alltax)))
+library(reshape2)
+ii<-data.frame(dcast(id ~ cluster,data=cl,fill=0),row.names=1)
+ii[ii>0]<-1
+ii<-ii[colnames(otu.mat),]
+colnames(ii)<-as.character(alltax)
+
+gen.mat<-as.matrix(otu.mat) %*% as.matrix(ii)
+gen.mat.sub<-filter_abundance(abutab=gen.mat, groups=model.specs$Group, min.mean=abu_thresh_lower, group.min.presence=presence_thresh)
+res.gen<-test_abundance_asinsqrt(abundance_data=gen.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
+res.gen$p.adj<-p.adjust(res.gen$p,"fdr")
+outmat.gen<-res.gen[res.gen$p.adj<0.05 & is.na(res.gen$p.adj)==F,]
+
+otu_to_siggen<-names(which(rowSums(ii[,rownames(outmat.gen)])>0))
+res.gen<-res.otu[rownames(res.otu) %in% otu_to_siggen,]
+
+outmat.gen.annotated<-res.gen
+outmat.gen.annotated$tag<-rownames(outmat.gen.annotated)
+outmat.gen.annotated$tax<-apply(tt.gen[rownames(outmat.gen.annotated),],1,function(x) x[max(which(is.na(x)==F))])
+outmat.gen.annotated$ntips<-colSums(ii)[match(apply(tt.gen[rownames(outmat.gen.annotated),],1,paste, collapse=";"),alltax)]
+
+treep.gen<-plot_annotated_tree(phyloseq=testdataset, results=outmat.gen.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
+ggsave(treep.gen, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".gen.pdf"), height=16,width=20)
+
