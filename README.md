@@ -166,10 +166,14 @@ surpasses 0.5 the label is reported at this level. Addtionally, a tag-tips are d
 16. We will now create a plot of the tree with subtrees highlighted using the results. However, since the complete dataset has ~ 3,500 tips, we first need to filter these before plotting. We use the same theshold as before for the
 branch abundances. Then we create the plot and save it.
 ```
-> otu.mat.sub<-otu.mat[,apply(aggregate(. ~ model.specs$Group,data=data.frame(ifelse(otu.mat>0,1,0)),mean)[,-1],2,min)>presence_thresh & colMeans((otu.mat/subset_depth))>abu_thresh_lower]/subset_depth
 > otu.mat.sub<-filter_abundance(abutab=otu.mat, groups=model.specs$Group, min.mean=abu_thresh_lower, 
    group.min.presence=presence_thresh)
 > tips_to_keep<-colnames(otu.mat.sub)
-> treep<-plot_annotated_tree(phyloseq=testdataset, results=outmat.phylo.refined, phymat=phylomat.final, tips=tips_to_keep)
-> ggsave(treep, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".bc.new.pdf"),height=16,width=20)
+> treep<-plot_annotated_tree(phyloseq=testdataset, results=outmat.phylo.refined, 
+   phymat=phylomat.final, tips=tips_to_keep)
+> ggsave(treep, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".bc.new.pdf")
+   ,height=16,width=20)
 ```
+...The resulting image (after only slight movements of overlapping/truncated labels):
+
+![gevers-paat](paat/examples/gevers_no.vs.CD.paat.clean.png)
