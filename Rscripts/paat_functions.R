@@ -82,7 +82,7 @@ tipcounts.signal<-as.matrix(otu_table(phyloseq))[tips_in_branch,,drop=F]
 tipcounts.weights<-rowSums(tipcounts.signal)/sum(tipcounts.signal)
 df<-data.frame(tax_table(phyloseq),stringsAsFactors=F)[tips_in_branch,]
 df[is.na(df)]<-FALSE
-df[,7]<-ifelse(df[,7]==F,F,paste(df[,6],df[,7],sep="_"))
+if(ncol(df)==7){df[,7]<-ifelse(df[,7]==F,F,paste(df[,6],df[,7],sep="_"))}
 if(length(tips_in_branch)>1){
 ta<-apply(df,2,function(x){df2<-data.frame(tax=as.character(x),w=tipcounts.weights);if(all(df2$tax==F)){return(FALSE)};zz=aggregate(w ~ tax,data=df2,sum);notshown=sum(zz$w>annot_min & zz$w<=show_min & zz$tax!=F);zz<-zz[zz$w>show_min & zz$tax!="FALSE",];zz<-zz[order(zz$w,decreasing=T),];
    ifelse(sum(zz$w)>annot_thresh,ifelse(notshown>0,paste0(paste(zz$tax,collapse=","),"(+",notshown,")"),paste(zz$tax,collapse=",")),"")})

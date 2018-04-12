@@ -4,7 +4,7 @@ PAAT is a framework to test for differential abundances in 16S rRNA gene sequenc
 
 By using phylogenetic information of (Z)OTUs/ASVs PAAT can identify signals exhibited by sub-trees of the initial phylogenetic tree.
 
-The method does not depend on classification using databases, which is error-prone due to wrong annotations of references sequences or uncertain assignments.
+The method does not depend on classification using databases, which is error-prone due to wrong annotations of references sequences or uncertain assignments. It can be used with denovo generated phylogenetic OTUs/trees or with pre computed reference trees from closed-reference OTU picking (e.g. greengenes).
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ PAAT is created to work with phyloseq objects that contain:
 3. Sample grouping information (and additional covariates to be corrected for)
 4. Taxonomic information about the OTUs to annotate clusters
 
-## Example steps
+## Example 1: Treatment-naive microbiota
 
 The test dataset is a subset of the dataset from the article "The treatment-naive microbiome in new-onset Crohn's disease" by Gevers *et al.*. Description on how this dataset was created and filtered is found [here](../master/examples/gevers_generate_testdataset.R).
 
@@ -181,13 +181,13 @@ branch abundances. Then we create the plot and save it.
 
 17. We also apply the same linear model framework to the OTU abundance table and plot the tree.
 ```
-res.otu<-test_abundance_asinsqrt(abundance_data=otu.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
-res.otu$p.adj<-p.adjust(res.otu$p,"fdr")
-outmat.otu<-res.otu[res.otu$p.adj<0.05 & is.na(res.otu$p.adj)==F,]
-phylomat.otu<-ifelse(cor(otu.mat.sub)==1,1,0)
-outmat.otu.annotated<-annotate_branches(phyloseq=testdataset,results=outmat.otu, phylomat=phylomat.otu)
-treep.otu<-plot_annotated_tree(phyloseq=testdataset, results=outmat.otu.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
-ggsave(treep.otu, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".otu.pdf"), height=16,width=20)
+> res.otu<-test_abundance_asinsqrt(abundance_data=otu.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
+> res.otu$p.adj<-p.adjust(res.otu$p,"fdr")
+> outmat.otu<-res.otu[res.otu$p.adj<0.05 & is.na(res.otu$p.adj)==F,]
+> phylomat.otu<-ifelse(cor(otu.mat.sub)==1,1,0)
+> outmat.otu.annotated<-annotate_branches(phyloseq=testdataset,results=outmat.otu, phylomat=phylomat.otu)
+> treep.otu<-plot_annotated_tree(phyloseq=testdataset, results=outmat.otu.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
+> ggsave(treep.otu, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".otu.pdf"), height=16,width=20)
 ```
    It shows, that the PAAT picks up all signals also seen in the OTU based analysis, plus additional signals not seen when analyzing OTUs (e.g. Prevotella copri)
 
