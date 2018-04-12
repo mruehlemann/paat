@@ -176,4 +176,4 @@ branch abundances. Then we create the plot and save it.
 ```
 ...The resulting image (after only slight movements of overlapping/truncated labels):
 
-![gevers-paat](paat/examples/gevers_no.vs.CD.paat.clean.png)
+![gevers-paat](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.paat.clean.png)
