@@ -13,6 +13,7 @@ R Packages:
 * phyloseq 
 * vegan (distance calculation)
 * ape (tree methods)
+* ggtree (plotting)
 
 PAAT is created to work with phyloseq objects that contain:
 
@@ -82,9 +83,8 @@ phy_tree()    Phylogenetic Tree: [ 9965 tips and 9964 internal nodes ]
 > presence_thresh=0.25
 > abu_thresh_upper=0.5
 > abu_thresh_lower=0.001
-> phylocount.filter<-phylocount[,colMeans(phylocount/subset_depth)<abu_thresh_upper 
-  & colMeans(phylocount/subset_depth)>abu_thresh_lower 
-  & apply(aggregate(. ~ model.specs$Group,data=data.frame(ifelse(phylocount>0,1,0)),mean)[,-1],2,min)>presence_thresh]
+> phylocount.filter<-filter_abundance(abutab=phylocount, groups=model.specs$Group, min.mean=abu_thresh_lower, 
+   max.mean=abu_thresh_upper, group.min.presence=presence_thresh)
 ```
 
 10. To futher reduce redundant branches, parent branches that are more than 95% similar (Bray-Curtis) to one of their sub-branches are excluded.
@@ -154,29 +154,22 @@ other clusters. Through this, only the strongest independent signals are retaine
 [1] 28
 ```
 
-15. Out of the 135 Signal, 28 are retained as independent. 
+15. Out of the 135 Signal, 28 are retained as independent. We annotate these branches by weighing the tip labels at the different taxonomic levels by the mean abundances in the dataset. Only if the cumulative weight at a levels
+surpasses 0.5 the label is reported at this level. Addtionally, a tag-tips are defined, as the highest abundant tips in the respective branches.
 ```
-phylocount.final<-phylocount.filter[,rownames(outmat.phylo.refined)]
-phylomat.final<-phylomat.filter[,rownames(outmat.phylo.refined)]
+> phylocount.final<-phylocount.filter[,rownames(outmat.phylo.refined)]
+> phylomat.final<-phylomat.filter[,rownames(outmat.phylo.refined)]
 
-outmat.phylo.refined$tag<-NA
-outmat.phylo.refined$tax<-NA
-outmat.phylo.refined$ntips<-NA
+> outmat.annotated<-annotate_branches(phyloseq=testdataset,results=outmat.phylo.refined, phylomat=phylomat.final)
+```
 
-for(signal in rownames(outmat.phylo.refined)){
-tips_in_branch<-names(which(phylomat.final[,signal]==1))
-tipcounts.signal<-as.matrix(otu_table(testdataset))[tips_in_branch,,drop=F]
-tipcounts.weights<-rowSums(tipcounts.signal)/sum(tipcounts.signal)
-if(length(tips_in_branch)>1){
-df<-data.frame(tax_table(testdataset))[tips_in_branch,]
-df[,7]<-ifelse(is.na(df[,7]),NA,paste(df[,6],df[,7],sep="_"))
-ta<-apply(df,2,function(x){df2<-data.frame(tax=as.character(x),w=tipcounts.weights);if(all(is.na(df2$tax))){return(FALSE)};zz=aggregate(w ~ tax,data=df2,sum);zz<-zz[zz$w>0.2 & zz$tax!="FALSE",];zz<-zz[order(zz$w,decreasing=T),];ifelse(sum(zz$w)>0.5,paste(zz$tax,collapse=";"),"")})
-}else{
-ta<-data.frame(tax_table(testdataset))[tips_in_branch,]
-ta[,7]<-ifelse(is.na(ta[,7]),NA,paste(ta[,6],ta[,7],sep="_"))
-}
-ta<-ta[is.na(ta)==F & ta!=F & ta!=""]
-outmat.phylo.refined[signal,c("tag","tax","ntips")]<-c(names(which.max(tipcounts.weights)),ta[length(ta)],length(tips_in_branch))
-}
-
+16. We will now create a plot of the tree with subtrees highlighted using the results. However, since the complete dataset has ~ 3500 tips, we first need to filter these before plotting. We use the same theshold as before for the
+branch abundances. Then we create the plot and save it.
+```
+> otu.mat.sub<-otu.mat[,apply(aggregate(. ~ model.specs$Group,data=data.frame(ifelse(otu.mat>0,1,0)),mean)[,-1],2,min)>presence_thresh & colMeans((otu.mat/subset_depth))>abu_thresh_lower]/subset_depth
+> otu.mat.sub<-filter_abundance(abutab=otu.mat, groups=model.specs$Group, min.mean=abu_thresh_lower, 
+   group.min.presence=presence_thresh)
+> tips_to_keep<-colnames(otu.mat.sub)
+> treep<-plot_annotated_tree(phyloseq=testdataset, results=outmat.phylo.refined, phymat=phylomat.final, tips=tips_to_keep)
+> ggsave(treep, file=paste0(paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".bc.new.pdf"),height=16,width=20)
 ```
