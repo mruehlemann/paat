@@ -96,7 +96,7 @@ phy_tree()    Phylogenetic Tree: [ 9965 tips and 9964 internal nodes ]
 > phylomat.filter.cor[upper.tri(phylomat.filter.cor)]<-0
 > phylomat.filter.cor<-ifelse(phylomat.filter.cor>0,1,0)
 ```
-...Then we calculate the branch similarity. By multplying these to matrices field by field, we only get similarity for parent branches to all their sub-branches. We filter out all parent branches that are > 95% similar to one of their child branches.
+... Then we calculate the branch similarity. By multplying these to matrices field by field, we only get similarity for parent branches to all their sub-branches. We filter out all parent branches that are > 95% similar to one of their child branches.
 ```
 > phylocount.bc<-1-as.matrix(vegdist(t(phylocount.filter)))
 > diag(phylocount.bc)<-0
@@ -174,6 +174,6 @@ branch abundances. Then we create the plot and save it.
 > ggsave(treep, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".bc.new.pdf")
    ,height=16,width=20)
 ```
-...The resulting image (after only slight movements of overlapping/truncated labels):
+... The resulting image (after only slight movements of overlapping/truncated labels):
 
 ![gevers-paat](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.paat.clean.png)
