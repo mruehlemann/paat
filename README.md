@@ -195,35 +195,74 @@ ggsave(treep.otu, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".v
 
 18. We can also perform the calculations on groups using taxonomic assigments. For this we collapse OTUs with the same annotation down to genus level into clusters and use them in differential abundance calculation.
 ```
-tax.gen<-unique(tax_table(testdataset)[,1:6])
-tt.gen<-tax_table(testdataset)[,1:6]
-alltax<-apply(tax.gen,1,paste,collapse=";")
-cl<-data.frame(id=rownames(tt.gen), cluster=sapply(apply(tt.gen,1,paste,collapse=";"),function(x) match(x, alltax)))
-library(reshape2)
-ii<-data.frame(dcast(id ~ cluster,data=cl,fill=0),row.names=1)
-ii[ii>0]<-1
-ii<-ii[colnames(otu.mat),]
-colnames(ii)<-as.character(alltax)
+> tax.gen<-unique(tax_table(testdataset)[,1:6])
+> tt.gen<-tax_table(testdataset)[,1:6]
+> alltax<-apply(tax.gen,1,paste,collapse=";")
+> cl<-data.frame(id=rownames(tt.gen), cluster=sapply(apply(tt.gen,1,paste,collapse=";"),function(x) match(x, alltax)))
+> library(reshape2)
+> ii<-data.frame(dcast(id ~ cluster,data=cl,fill=0),row.names=1)
+> ii[ii>0]<-1
+> ii<-ii[colnames(otu.mat),]
+> colnames(ii)<-as.character(alltax)
 
-gen.mat<-as.matrix(otu.mat) %*% as.matrix(ii)
-gen.mat.sub<-filter_abundance(abutab=gen.mat, groups=model.specs$Group, min.mean=abu_thresh_lower, group.min.presence=presence_thresh)
-res.gen<-test_abundance_asinsqrt(abundance_data=gen.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
-res.gen$p.adj<-p.adjust(res.gen$p,"fdr")
-outmat.gen<-res.gen[res.gen$p.adj<0.05 & is.na(res.gen$p.adj)==F,]
+> gen.mat<-as.matrix(otu.mat) %*% as.matrix(ii)
+> gen.mat.sub<-filter_abundance(abutab=gen.mat, groups=model.specs$Group, min.mean=abu_thresh_lower, group.min.presence=presence_thresh)
+> res.gen<-test_abundance_asinsqrt(abundance_data=gen.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
+> res.gen$p.adj<-p.adjust(res.gen$p,"fdr")
+> outmat.gen<-res.gen[res.gen$p.adj<0.05 & is.na(res.gen$p.adj)==F,]
 
-otu_to_siggen<-names(which(rowSums(ii[,rownames(outmat.gen)])>0))
-res.gen<-res.otu[rownames(res.otu) %in% otu_to_siggen,]
+> otu_to_siggen<-names(which(rowSums(ii[,rownames(outmat.gen)])>0))
+> res.gen<-res.otu[rownames(res.otu) %in% otu_to_siggen,]
 
-outmat.gen.annotated<-res.gen
-outmat.gen.annotated$tag<-rownames(outmat.gen.annotated)
-outmat.gen.annotated$tax<-apply(tt.gen[rownames(outmat.gen.annotated),],1,function(x) x[max(which(is.na(x)==F))])
-outmat.gen.annotated$ntips<-colSums(ii)[match(apply(tt.gen[rownames(outmat.gen.annotated),],1,paste, collapse=";"),alltax)]
+> outmat.gen.annotated<-res.gen
+> outmat.gen.annotated$tag<-rownames(outmat.gen.annotated)
+> outmat.gen.annotated$tax<-apply(tt.gen[rownames(outmat.gen.annotated),],1,function(x) x[max(which(is.na(x)==F))])
+> outmat.gen.annotated$ntips<-colSums(ii)[match(apply(tt.gen[rownames(outmat.gen.annotated),],1,paste, collapse=";"),alltax)]
 
-treep.gen<-plot_annotated_tree(phyloseq=testdataset, results=outmat.gen.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
-ggsave(treep.gen, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".gen.pdf"), height=16,width=20)
+> treep.gen<-plot_annotated_tree(phyloseq=testdataset, results=outmat.gen.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
+> ggsave(treep.gen, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".gen.pdf"), height=16,width=20)
 ```
 
    We see, that the overall signals are in some regions much broader than for the other methods. Faecalibacterium signal is not picked up, likely because of two different signals in different direction within the Faecalibacterium genus.  
 
 ![gevers-otu](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.gen.clean.png)
 
+```
+> sessionInfo()
+R version 3.4.1 (2017-06-30)
+Platform: x86_64-apple-darwin16.6.0 (64-bit)
+Running under: macOS High Sierra 10.13
+
+Matrix products: default
+BLAS: /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+LAPACK: /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libLAPACK.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] reshape2_1.4.2  ggtree_1.8.2    treeio_1.0.2    ggplot2_2.2.1  
+ [5] MASS_7.3-47     ape_4.1         vegan_2.4-4     lattice_0.20-35
+ [9] permute_0.9-4   phyloseq_1.20.0
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15        compiler_3.4.1      plyr_1.8.4         
+ [4] XVector_0.16.0      iterators_1.0.8     tools_3.4.1        
+ [7] zlibbioc_1.22.0     jsonlite_1.5        tibble_1.3.4       
+[10] nlme_3.1-131        rhdf5_2.20.0        gtable_0.2.0       
+[13] mgcv_1.8-17         pkgconfig_2.0.1     rlang_0.1.2        
+[16] Matrix_1.2-10       foreach_1.4.4       igraph_1.1.2       
+[19] rvcheck_0.0.9       parallel_3.4.1      stringr_1.2.0      
+[22] cluster_2.0.6       Biostrings_2.44.2   S4Vectors_0.14.4   
+[25] IRanges_2.10.3      multtest_2.32.0     stats4_3.4.1       
+[28] ade4_1.7-8          grid_3.4.1          glue_1.1.1         
+[31] Biobase_2.36.2      data.table_1.10.4   survival_2.41-3    
+[34] purrr_0.2.3         tidyr_0.7.1         magrittr_1.5       
+[37] splines_3.4.1       scales_0.5.0        codetools_0.2-15   
+[40] BiocGenerics_0.22.0 biomformat_1.4.0    colorspace_1.3-2   
+[43] labeling_0.3        stringi_1.1.5       lazyeval_0.2.0     
+[46] munsell_0.4.3      
+```
