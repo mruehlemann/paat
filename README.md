@@ -22,9 +22,12 @@ PAAT is created to work with phyloseq objects that contain:
 3. Sample grouping information (and additional covariates to be corrected for)
 4. Taxonomic information about the OTUs to annotate clusters
 
-## Example 1: Treatment-naive microbiota
+## Example: Treatment-naive microbiota in inflammatory bowel disease
 
 The test dataset is a subset of the dataset from the article "The treatment-naive microbiome in new-onset Crohn's disease" by Gevers *et al.*. Description on how this dataset was created and filtered is found [here](../master/examples/gevers_generate_testdataset.R).
+
+Another dataset used for demonstration is the data from [Giloteaux et al. (2016)](https://doi.org/10.1186/s40168-016-0171-4). Here we generated the dataset using the DADA2 pipeline, the scripts can be found [here](../master/examples/giloteaux_generate_testdataset.R).
+Tha analysis was performed in analogy to the following step, the code can be found [here](../master/examples/giloteaux_code,R).
 
 1. load `phyloseq` and PAAT functions
 ```

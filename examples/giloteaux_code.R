@@ -3,16 +3,16 @@ library(vegan)
 library(ape)
 source("https://github.com/mruehlemann/paat/raw/master/Rscripts/paat_functions.R")
 
-load("gevers.Robj")
+load("giloteaux.Robj")
 ps
 
-subset_depth=3000 
+subset_depth=20000 
 ps.even<-rarefy_even_depth(ps,sample.size=subset_depth,replace=F,rngseed=666)
 
-testvar="diagnosis"
-set1=c("no")
-set2=c("CD")
-covar=c("sex","age")
+set1=c("Control")
+set2=c("Patient")
+testvar="Subject"
+covar=c("Age","BMI","Sex")
 
 testdataset<-prune_samples(unlist(sample_data(ps.even)[,testvar]) %in% c(set1,set2), ps.even)
 model.specs<-data.frame(sample_data(testdataset))[,c(covar,testvar)]
