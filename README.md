@@ -6,7 +6,21 @@ By using phylogenetic information of (Z)OTUs/ASVs PAAT can identify signals exhi
 
 The method does not depend on classification using databases, which is error-prone due to wrong annotations of references sequences or uncertain assignments. It can be used with denovo generated phylogenetic OTUs/trees or with pre computed reference trees from closed-reference OTU picking (e.g. greengenes).
 
-## Prerequisites
+PAAT is based on a matrix representation of the bifurcated phylogenetic relationship of the representative sequences. All branches of the phylogenetic tree are in a first step converted to this Sequence-to-branch matrix which is 1 if a sequence is a tip in the respective branch and 0 if not. Through matrix multiplication of the sequence/OTU abundance table
+with this phylogenetic matrix, we obtain a branch-abundance matrix. To reduce multiple testing burden, we first filter out branches that are too low abundant/prevalent, addtionally also too high abundant branches can be reduced, as they like represent too broad signals. A second filtering step removes branches that differt too little from their child branches. 
+This similarity is defined as the Bray-Curtis similarity of the parent branch to its child branches. We use a default value of > 95% similarity for a branch to be removed. A last step to remove broad signals is implemented by calculating the Jaccard index of a parent branch to its child-branches. If a branche is large, defined as containing > 25% of all tips in 
+the tree, and both of its direct child branches have a Jaccard index of > 0.2 compared to the parent branch (meaning they both contain at least 20% of the tips in the parent branch), this branch and all it's parent branches are removed.
+
+Once the filtering is completed, any statistical framework to test for differential abundance can be applied. We implemented two default methods: linear models using arcsin-sqareroot transformed relative abundances (`test_abundance_asinsqrt`) and a negative-binomial GLM approach (`test_abundance`), both with the possibility to include covariates
+to be corrected for in the model. After abundance testing, we are likely left with redundant and/or
+overlapping results, as a strong differential abundance in a sub-branch will likely lead to a (though less-strong) signal in parent branches. To refine signals, we first cluster sub-branches with the same effect direction and belonging to the same part of the tree. For each of these clusters, we select the best signal (defined as the absolute beta value 
+in the statistical model) and remove all parent- and  child-branches to this signal, of the remaining signals we again pick the best and remove all it's related signals. This iteration is carried on until only independent signals remain in the cluster. After performing this for all clusters we are left with the final set of differentially abundant phylogenetic groups.
+
+Additionally we implemented an annotation algorithm for these final signals. The annotation is based on the taxa_table() of the phyloseq object used in the analysis. By weighing the taxonomic annotations of the sequences/OTUs based on their abundance, we try to define the major groups affected by the differential abundance. This is performed by the `annotate_branches` function.
+
+Finally, we implemented a function that visualizes the final results on a plotted tree depicting the phylogenetic signals in diffrential abundance and the annotation.
+
+## Pre-requisites
 
 R Packages:
 * MASS (glm.nb function)

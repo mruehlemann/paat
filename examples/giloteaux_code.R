@@ -6,6 +6,11 @@ source("https://github.com/mruehlemann/paat/raw/master/Rscripts/paat_functions.R
 load("giloteaux.Robj")
 ps
 
+if(taxa_are_rows(ps)==F){
+tmp<-ps
+ps<-merge_phyloseq(t(otu_table(tmp)),phy_tree(tmp),sample_data(tmp),tax_table(tmp))
+}
+
 subset_depth=20000 
 ps.even<-rarefy_even_depth(ps,sample.size=subset_depth,replace=F,rngseed=666)
 
@@ -43,8 +48,6 @@ phylocount.filter<-phylocount.filter[,!(colnames(phylocount.filter) %in% unique(
 
 outmat<-test_abundance(phylocount.filter,model.specs,testingvar="Group",covars=covar,zerothresh=0.05)
 
-phylocount.filter.rel<-phylocount.filter/subset_depth
-outmat<-test_abundance_asinsqrt(phylocount.filter.rel,model.specs,testingvar="Group",covars=covar)
 outmat$p.adj<-p.adjust(outmat$p,"fdr")
 outmat.phylo<-outmat[outmat$p.adj<0.05 & is.na(outmat$p.adj)==F,]
 nrow(outmat.phylo)
@@ -77,7 +80,7 @@ otu.mat<-as.data.frame(t(otu_table(testdataset)))
 otu.mat.sub<-filter_abundance(abutab=otu.mat, groups=model.specs$Group, min.mean=abu_thresh_lower, group.min.presence=presence_thresh)
 tips_to_keep<-colnames(otu.mat.sub)
 treep<-plot_annotated_tree(phyloseq=testdataset, results=outmat.annotated, phymat=phylomat.final, tips=tips_to_keep)
-ggsave(treep, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".paat.pdf"), height=16,width=20)
+ggsave(treep, file=paste0("examples/giloteaux_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".paat.pdf"), height=16,width=20)
 
 
 res.otu<-test_abundance_asinsqrt(abundance_data=otu.mat.sub/subset_depth, sample_specs=model.specs, testingvar="Group", covars=covar)
@@ -89,7 +92,7 @@ phylomat.otu<-ifelse(cor(otu.mat.sub)==1,1,0)
 outmat.otu.annotated<-annotate_branches(phyloseq=testdataset,results=outmat.otu, phylomat=phylomat.otu)
 
 treep.otu<-plot_annotated_tree(phyloseq=testdataset, results=outmat.otu.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
-ggsave(treep.otu, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".otu.pdf"), height=16,width=20)
+ggsave(treep.otu, file=paste0("examples/giloteaux_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".otu.pdf"), height=16,width=20)
 
 
 
@@ -118,5 +121,5 @@ outmat.gen.annotated$tax<-apply(tt.gen[rownames(outmat.gen.annotated),],1,functi
 outmat.gen.annotated$ntips<-colSums(ii)[match(apply(tt.gen[rownames(outmat.gen.annotated),],1,paste, collapse=";"),alltax)]
 
 treep.gen<-plot_annotated_tree(phyloseq=testdataset, results=outmat.gen.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
-ggsave(treep.gen, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".gen.pdf"), height=16,width=20)
+ggsave(treep.gen, file=paste0("examples/giloteaux_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".gen.pdf"), height=16,width=20)
 
