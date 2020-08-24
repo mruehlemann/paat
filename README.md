@@ -1,12 +1,12 @@
-# PAAT (Phylogeny-aware Abundance Testing)
+# PhAAT (Phylogeny-aware Abundance Testing)
 
-PAAT is a framework to test for differential abundances in 16S rRNA gene sequencing data.
+PhAAT is a framework to test for differential abundances in 16S rRNA gene sequencing data.
 
-By using phylogenetic information of (Z)OTUs/ASVs PAAT can identify signals exhibited by sub-trees of the initial phylogenetic tree.
+By using phylogenetic information of (Z)OTUs/ASVs PhAAT can identify signals exhibited by sub-trees of the initial phylogenetic tree.
 
 The method does not depend on classification using databases, which is error-prone due to wrong annotations of references sequences or uncertain assignments. It can be used with denovo generated phylogenetic OTUs/trees or with pre computed reference trees from closed-reference OTU picking (e.g. greengenes).
 
-PAAT is based on a matrix representation of the bifurcated phylogenetic relationship of the representative sequences. All branches of the phylogenetic tree are in a first step converted to this Sequence-to-branch matrix which is 1 if a sequence is a tip in the respective branch and 0 if not. Through matrix multiplication of the sequence/OTU abundance table
+PhAAT is based on a matrix representation of the bifurcated phylogenetic relationship of the representative sequences. All branches of the phylogenetic tree are in a first step converted to this Sequence-to-branch matrix which is 1 if a sequence is a tip in the respective branch and 0 if not. Through matrix multiplication of the sequence/OTU abundance table
 with this phylogenetic matrix, we obtain a branch-abundance matrix. To reduce multiple testing burden, we first filter out branches that are too low abundant/prevalent, addtionally also too high abundant branches can be reduced, as they like represent too broad signals. A second filtering step removes branches that differt too little from their child branches. 
 This similarity is defined as the Bray-Curtis similarity of the parent branch to its child branches. We use a default value of > 95% similarity for a branch to be removed. A last step to remove broad signals is implemented by calculating the Jaccard index of a parent branch to its child-branches. If a branche is large, defined as containing > 25% of all tips in 
 the tree, and both of its direct child branches have a Jaccard index of > 0.2 compared to the parent branch (meaning they both contain at least 20% of the tips in the parent branch), this branch and all it's parent branches are removed.
@@ -29,7 +29,7 @@ R Packages:
 * ape (tree methods)
 * ggtree (plotting)
 
-PAAT is created to work with phyloseq objects that contain:
+PhAAT is created to work with phyloseq objects that contain:
 
 1. The OTU/ASV abundance table (taxa_are_rows==T)
 2. The Phylogenetic Tree of the OTU/ASV Sequences
@@ -43,12 +43,12 @@ The test dataset is a subset of the dataset from the article "The treatment-naiv
 Another dataset used for demonstration is the data from [Giloteaux et al. (2016)](https://doi.org/10.1186/s40168-016-0171-4). Here we generated the dataset using the DADA2 pipeline, the scripts can be found [here](../master/examples/giloteaux_generate_testdataset.R).
 The analysis was performed in analogy to the following step, the code can be found [here](../master/examples/giloteaux_code.R).
 
-1. load `phyloseq` and PAAT functions
+1. load `phyloseq` and PhAAT functions
 ```
 > library(phyloseq)
 > library(vegan)
 > library(ape)
-> source("https://github.com/mruehlemann/paat/raw/master/Rscripts/paat_functions.R")
+> source("https://github.com/mruehlemann/phaat/raw/master/Rscripts/phaat_functions.R")
 ```
 
 2. load testdataset `ps`
@@ -194,7 +194,7 @@ branch abundances. Then we create the plot and save it.
 ```
    The resulting image (after only slight movements of overlapping/truncated labels):
 
-![gevers-paat](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.paat.clean.png)
+![gevers-phaat](https://github.com/mruehlemann/phaat/raw/master/examples/gevers_no.vs.CD.paat.clean.png)
 
 17. We also apply the same linear model framework to the OTU abundance table and plot the tree.
 ```
@@ -206,9 +206,9 @@ branch abundances. Then we create the plot and save it.
 > treep.otu<-plot_annotated_tree(phyloseq=testdataset, results=outmat.otu.annotated, phymat=phylomat.otu, tips=c(tips_to_keep,outmat.annotated$tag))
 > ggsave(treep.otu, file=paste0("examples/gevers_",paste0(c(set1),collapse=""),".vs.",paste0(c(set2),collapse=""),".otu.pdf"), height=16,width=20)
 ```
-   It shows, that the PAAT picks up all signals also seen in the OTU based analysis, plus additional signals not seen when analyzing OTUs (e.g. Prevotella copri)
+   It shows, that the PhAAT picks up all signals also seen in the OTU based analysis, plus additional signals not seen when analyzing OTUs (e.g. Prevotella copri)
 
-![gevers-otu](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.otu.clean.png)
+![gevers-otu](https://github.com/mruehlemann/phaat/raw/master/examples/gevers_no.vs.CD.otu.clean.png)
 
 18. We can also perform the calculations on groups using taxonomic assigments. For this we collapse OTUs with the same annotation down to genus level into clusters and use them in differential abundance calculation.
 ```
@@ -242,7 +242,7 @@ branch abundances. Then we create the plot and save it.
 
    We see, that the overall signals are in some regions much broader than for the other methods. Faecalibacterium signal is not picked up, likely because of two different signals in different direction within the Faecalibacterium genus.  
 
-![gevers-otu](https://github.com/mruehlemann/paat/raw/master/examples/gevers_no.vs.CD.gen.clean.png)
+![gevers-otu](https://github.com/mruehlemann/phaat/raw/master/examples/gevers_no.vs.CD.gen.clean.png)
 
 ```
 > sessionInfo()
